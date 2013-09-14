@@ -21,3 +21,7 @@ msgdclient
 *.lai
 *.la
 *.a
+
+# qtcreator files
+msgd.pro.user
+

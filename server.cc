@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include <iostream>
+
 Server::Server(int port) {
     // setup variables
     port_ = port;
@@ -52,10 +54,6 @@ Server::create() {
 
 void
 Server::serve() {
-    InfiniBuffer mybuf;
-    string s = mybuf.GetNBytes(3);
-    printf("nbytes: '%s'\n", s.c_str());
-
     // setup client
     int client;
     struct sockaddr_in client_addr;
@@ -63,7 +61,6 @@ Server::serve() {
 
       // accept clients
     while ((client = accept(server_,(struct sockaddr *)&client_addr,&clientlen)) > 0) {
-
         handle(client);
         close(client);
     }
@@ -82,7 +79,7 @@ Server::handle(int client) {
         if (request.type == BAD_REQ)
             break;
         // send response
-        bool success = send_response(client,"Hi there. You said something.");
+        bool success = send_response(client,string("Hi there. You said something."));
         // break if an error occurred
         if (not success)
             break;
@@ -116,7 +113,26 @@ Server::collect_request(int client) {
         }
         buf_.ReturnBuffer(buf, nread);
     }
+    // parse the received command
+    int fields;
     switch (rawReq.at(0)) {
+    case 'p':
+        int msgLen;
+        fields = sscanf(rawReq.c_str(), "put %s %s %d\n", &req.name, &req.subject, &msgLen);
+        if (fields != 3) {
+            break;
+        }
+        req.type = PUT;
+        break;
+    case 'l':
+        req.type = LIST;
+        break;
+    case 'g':
+        req.type = GET;
+        break;
+    case 'r':
+        req.type = RESET;
+        break;
     }
     return req;
 }
