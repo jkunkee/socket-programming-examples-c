@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include "infinibuf.h"
+
 Server::Server(int port) {
     // setup variables
     port_ = port;
@@ -55,6 +57,10 @@ Server::create() {
 
 void
 Server::serve() {
+    InfiniBuffer mybuf;
+    string s = mybuf.GetNBytes(3);
+    printf("nbytes: '%s'\n", s.c_str());
+
     // setup client
     int client;
     struct sockaddr_in client_addr;
@@ -66,7 +72,7 @@ Server::serve() {
         handle(client);
         close(client);
     }
-    
+
     close(server_);
 
 }
@@ -76,7 +82,7 @@ Server::handle(int client) {
     // loop to handle all requests
     while (1) {
         // get a request
-        string request = get_request(client);
+        string request = collect_request(client);
         // break if client is done or an error occurred
         if (request.empty())
             break;
@@ -89,7 +95,7 @@ Server::handle(int client) {
 }
 
 string
-Server::get_request(int client) {
+Server::collect_request(int client) {
     string request = "";
     // read until we get a newline
     while (request.find("\n") == string::npos) {

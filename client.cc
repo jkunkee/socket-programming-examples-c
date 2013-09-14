@@ -50,7 +50,7 @@ Client::create() {
 void
 Client::echo() {
     string line;
-    
+
     // loop to handle user interface
     while (getline(cin,line)) {
         // append a newline

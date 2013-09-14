@@ -1,46 +1,52 @@
 #include "infinibuf.h"
 
 #define DEFAULT_BUF_SIZE  1024
-#define DEFAULT_BUF_COUNT 2
 
 // constructors
-InfiniBuffer::InfiniBuffer() {
-    InfiniBuffer(DEFAULT_BUF_SIZE, DEFAULT_BUF_COUNT);
-}
-InfiniBuffer::InfiniBuffer(int _bufSize, int _bufCount) {
-    bufCount = _bufCount;
-    bufSize = _bufSize;
-
-	curBufIdx = 0;
-	curBufLevel = 0;
-
-    buffers = new char*[_bufCount];
-
-    for (int idx = 0; idx < bufCount; idx++) {
-        buffers[idx] = new char[_bufSize+1];
-    }
-}
-InfiniBuffer::~InfiniBuffer() {
-    for (int idx = 0; idx < bufCount; idx++) {
-        delete buffers[idx];
-    }
-    delete buffers;
-}
+InfiniBuffer::InfiniBuffer() {}
+InfiniBuffer::~InfiniBuffer() {}
 
 // other functions
-int InfiniBuffer::maxSize() {
-    return bufCount*bufSize;
+// Consumer functions
+string InfiniBuffer::ScanForSentinel(char sentinel) {
+    size_t sentinelIdx = buffer.find_first_of(sentinel, 0);
+    string retVal = "";
+
+    if (sentinelIdx == string::npos) {
+        return retVal;
+    }
+
+    return GetNBytes(sentinelIdx+1);
 }
-c_buf* InfiniBuffer::getBuffer() {
-    c_buf* retVal = new c_buf;
-    retVal->buf = buffers[curBufIdx]+curBufLevel;
-    retVal->size = bufSize - curBufLevel;
+string InfiniBuffer::GetNBytes(int n) {
+    string retVal = "";
+
+    if (buffer.length() < n) {
+        return retVal;
+    }
+
+    retVal = buffer.substr(0, n);
+    buffer.erase(0, n);
+
     return retVal;
 }
-void InfiniBuffer::returnBuffer(c_buf* cbuf, int bytesUsed) {
-    delete cbuf;
-    curBufLevel += bytesUsed;
-    if (curBufLevel >= bufSize) {
 
+// Producer functions
+c_buf* InfiniBuffer::GetBuffer() {
+    c_buf* buf = new c_buf;
+    buf->buf = new char[DEFAULT_BUF_SIZE];
+    buf->size = DEFAULT_BUF_SIZE;
+    return NULL;
+}
+void InfiniBuffer::ReturnBuffer(c_buf* buf, int used) {
+    if (buf == NULL) {
+        return;
     }
+    if (used > buf->size) {
+        return;
+    }
+
+    buffer.append(buf->buf, 0, used);
+    delete buf->buf;
+    delete buf;
 }

@@ -6,8 +6,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
 #include <string>
+#include "proto.h"
 
 using namespace std;
 
@@ -17,11 +17,10 @@ public:
     ~Server();
 
 private:
-
     void create();
     void serve();
     void handle(int);
-    string get_request(int);
+    Request collect_request(int);
     bool send_response(int, string);
 
     int port_;

@@ -1,8 +1,8 @@
 
 #include <sys/types.h>
+#include <string>
 
-#define DEFAULT_BUF_SIZE  1024
-#define DEFAULT_BUF_COUNT 2
+using namespace std;
 
 typedef struct c_buf {
     char* buf;
@@ -14,18 +14,15 @@ class InfiniBuffer {
 public:
 	// Constructor/Destructor sets
 	InfiniBuffer();
-	// bufSize is the size of each buffer, bufCount is how many buffers to start with
-	InfiniBuffer(int bufSize, int bufCount);
 	~InfiniBuffer();
 
-	// other functions
-    int maxSize();
-    c_buf* getBuffer();
-    void returnBuffer(c_buf* cbuf, int bytesUsed);
+	// Consumer functions
+	string ScanForSentinel(char sentinel);
+	string GetNBytes(int n);
+
+    // Producer functions
+    c_buf* GetBuffer();
+    void ReturnBuffer(c_buf* buf, int used);
 private:
-	char **buffers;
-	int curBufIdx;
-	int curBufLevel;
-	int bufCount;
-	int bufSize;
+    string buffer;
 };

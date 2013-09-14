@@ -2,14 +2,16 @@
 
 CXX=			g++ $(CCFLAGS)
 MSGD=			msgd.o server.o infinibuf.o
-MSGD_CLIENT=		msgdclient.o client.o
-OBJS =			$(MSGD) $(MSGD_CLIENT) 
+MSGD_CLIENT=		msgdclient.o client.o infinibuf.o
+OBJS =			$(MSGD) $(MSGD_CLIENT)
 
 LIBS=
 
 CCFLAGS= -g
 
 all:	msgd msgdclient
+run: all
+	@echo ./msgd -p 8080 \& ./msgdclient -h localhost -p 8080
 
 msgd:$(MSGD)
 	$(CXX) -o msgd $(MSGD) $(LIBS)
