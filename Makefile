@@ -1,39 +1,27 @@
 # Makefile for socket examples
 
 CXX=			g++ $(CCFLAGS)
-ECHO-SERVER-SIMPLE=	echo-server-simple.o
-ECHO-CLIENT-SIMPLE=	echo-client-simple.o
-ECHO-SERVER-SLOW=	echo-server-slow.o
-ECHO-SERVER=		echo-server.o server.o
-ECHO-CLIENT=		echo-client.o client.o
-OBJS =			$(ECHO-SERVER-SIMPLE) $(ECHO-CLIENT-SIMPLE) $(ECHO-SERVER-SLOW) $(ECHO-SERVER) $(ECHO-CLIENT) 
+MSGD=			msgd.o server.o
+MSGD_CLIENT=		msgdclient.o client.o
+OBJS =			$(MSGD) $(MSGD_CLIENT) 
 
 LIBS=
 
 CCFLAGS= -g
 
-all:	echo-server-simple echo-client-simple echo-server-slow echo-server echo-client
+all:	msgd msgdclient
 
-echo-server-simple:$(ECHO-SERVER-SIMPLE)
-	$(CXX) -o echo-server-simple $(ECHO-SERVER-SIMPLE) $(LIBS)
+msgd:$(MSGD)
+	$(CXX) -o msgd $(MSGD) $(LIBS)
 
-echo-client-simple:$(ECHO-CLIENT-SIMPLE)
-	$(CXX) -o echo-client-simple $(ECHO-CLIENT-SIMPLE) $(LIBS)
-
-echo-server-slow:$(ECHO-SERVER-SLOW)
-	$(CXX) -o echo-server-slow $(ECHO-SERVER-SLOW) $(LIBS)
-
-echo-server:$(ECHO-SERVER)
-	$(CXX) -o echo-server $(ECHO-SERVER) $(LIBS)
-
-echo-client:$(ECHO-CLIENT)
-	$(CXX) -o echo-client $(ECHO-CLIENT) $(LIBS)
+msgdclient:$(MSGD_CLIENT)
+	$(CXX) -o msgdclient $(MSGD_CLIENT) $(LIBS)
 
 clean:
 	rm -f $(OBJS) $(OBJS:.o=.d)
 
 realclean:
-	rm -f $(OBJS) $(OBJS:.o=.d) echo-server echo-client
+	rm -f $(OBJS) $(OBJS:.o=.d) msgd msgdclient
 
 
 # These lines ensure that dependencies are handled automatically.
