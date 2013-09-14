@@ -1,12 +1,8 @@
 #include "server.h"
 
-#include "infinibuf.h"
-
 Server::Server(int port) {
     // setup variables
     port_ = port;
-    buflen_ = 1024;
-    buf_ = new char[buflen_+1];
 
     // create and run the server
     create();
@@ -14,7 +10,6 @@ Server::Server(int port) {
 }
 
 Server::~Server() {
-    delete buf_;
 }
 
 void
@@ -82,41 +77,48 @@ Server::handle(int client) {
     // loop to handle all requests
     while (1) {
         // get a request
-        string request = collect_request(client);
+        Request request = collect_request(client);
         // break if client is done or an error occurred
-        if (request.empty())
+        if (request.type == BAD_REQ)
             break;
         // send response
-        bool success = send_response(client,request);
+        bool success = send_response(client,"Hi there. You said something.");
         // break if an error occurred
         if (not success)
             break;
     }
 }
 
-string
+Request
 Server::collect_request(int client) {
-    string request = "";
+    Request req;
+    req.type = BAD_REQ;
+    string rawReq;
+
     // read until we get a newline
-    while (request.find("\n") == string::npos) {
-        int nread = recv(client,buf_,1024,0);
+    while ((rawReq = buf_.ScanForSentinel('\n')) == "") {
+        // make a buffer (inefficient, I know; v2 will find a buffer)
+        c_buf *buf = buf_.GetBuffer();
+        // recv off the socket
+        int nread = recv(client,buf->buf,buf->size,0);
         if (nread < 0) {
-            if (errno == EINTR)
+            if (errno == EINTR) {
                 // the socket call was interrupted -- try again
                 continue;
-            else
+            } else {
+                perror("while scanning for sentinel");
                 // an error occurred, so break out
-                return "";
+                return req;
+            }
         } else if (nread == 0) {
             // the socket is closed
-            return "";
+            return req;
         }
-        // be sure to use append in case we have binary data
-        request.append(buf_,nread);
+        buf_.ReturnBuffer(buf, nread);
     }
-    // a better server would cut off anything after the newline and
-    // save it in a cache
-    return request;
+    switch (rawReq.at(0)) {
+    }
+    return req;
 }
 
 bool

@@ -1,4 +1,7 @@
 
+#ifndef INC_INFINIBUF_H
+#define INC_INFINIBUF_H
+
 #include <sys/types.h>
 #include <string>
 
@@ -9,7 +12,7 @@ typedef struct c_buf {
     ssize_t size;
 } c_buf;
 
-// This class is neither thread-safe nor reentrant.
+// This class is neither thread-safe nor reentrancy-safe.
 class InfiniBuffer {
 public:
 	// Constructor/Destructor sets
@@ -26,3 +29,5 @@ public:
 private:
     string buffer;
 };
+
+#endif

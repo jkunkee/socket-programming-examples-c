@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string>
 #include "proto.h"
+#include "infinibuf.h"
 
 using namespace std;
 
@@ -25,6 +26,5 @@ private:
 
     int port_;
     int server_;
-    int buflen_;
-    char* buf_;
+    InfiniBuffer buf_;
 };

@@ -36,7 +36,7 @@ c_buf* InfiniBuffer::GetBuffer() {
     c_buf* buf = new c_buf;
     buf->buf = new char[DEFAULT_BUF_SIZE];
     buf->size = DEFAULT_BUF_SIZE;
-    return NULL;
+    return buf;
 }
 void InfiniBuffer::ReturnBuffer(c_buf* buf, int used) {
     if (buf == NULL) {
