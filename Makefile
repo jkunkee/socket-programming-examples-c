@@ -1,7 +1,7 @@
 # Makefile for socket examples
 
 CXX=			g++ $(CCFLAGS)
-MSGD=			msgd.o server.o
+MSGD=			msgd.o server.o infinibuf.o
 MSGD_CLIENT=		msgdclient.o client.o
 OBJS =			$(MSGD) $(MSGD_CLIENT) 
 
