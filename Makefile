@@ -1,29 +1,30 @@
 # Makefile for socket examples
 
-CXX=			g++ $(CCFLAGS)
-MSGD=			msgd.o server.o infinibuf.o
-MSGD_CLIENT=		msgdclient.o client.o infinibuf.o
-OBJS =			$(MSGD) $(MSGD_CLIENT)
+CXX=	g++ $(CCFLAGS)
+UTIL=	logger.o infinibuf.o
+MSGD=	msgd.o server.o $(UTIL)
+MSG=	msg.o client.o $(UTIL)
+OBJS =	$(MSGD) $(MSG)
 
 LIBS=
 
 CCFLAGS= -g
 
-all:	msgd msgdclient
+all:	msgd msg
 run: all
-	@echo ./msgd -p 8080 \& ./msgdclient -h localhost -p 8080
+	@echo ./msgd -p 8080 \& ./msg -h localhost -p 8080
 
-msgd:$(MSGD)
+msgd: $(MSGD)
 	$(CXX) -o msgd $(MSGD) $(LIBS)
 
-msgdclient:$(MSGD_CLIENT)
-	$(CXX) -o msgdclient $(MSGD_CLIENT) $(LIBS)
+msg: $(MSG)
+	$(CXX) -o msg $(MSG) $(LIBS)
 
 clean:
 	rm -f $(OBJS) $(OBJS:.o=.d)
 
 realclean:
-	rm -f $(OBJS) $(OBJS:.o=.d) msgd msgdclient
+	rm -f $(OBJS) $(OBJS:.o=.d) msgd msg
 
 
 # These lines ensure that dependencies are handled automatically.
