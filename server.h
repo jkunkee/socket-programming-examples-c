@@ -15,6 +15,7 @@ using namespace std;
 class Server {
 public:
     Server(int);
+    Server(int, bool);
     ~Server();
 
 private:
@@ -27,4 +28,5 @@ private:
     int port_;
     int server_;
     InfiniBuffer buf_;
+    bool debug_;
 };
