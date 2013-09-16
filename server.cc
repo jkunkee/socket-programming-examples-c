@@ -86,26 +86,36 @@ Server::handle(int client) {
     LOG("Handling client on socket #%d\n", client);
     // loop to handle all requests
     while (1) {
+        bool success;
         // get a request
-        Request request = collect_request(client);
-        string response = "Boo";
+        Request request;
+        success = collect_request(client, &request);
+        if (not success) {
+            break;
+        }
+        string response = "Boo\n";
         // break if client is done or an error occurred
         if (request.type == BAD_REQ) {
             LOG("got bad request!\n");
-            response = "Badly Formatted Request";
+            response = "Badly Formatted Request\n";
         }
         // send response
-        bool success = send_response(client, response);
+        success = send_response(client, response);
         // break if an error occurred
         if (not success)
             break;
     }
 }
 
-Request
-Server::collect_request(int client) {
-    Request req;
-    req.type = BAD_REQ;
+bool
+Server::collect_request(int client, Request* req) {
+    if (req == NULL) {
+        return false;
+    }
+    // the default state of this request is BAD_REQ.
+    req->type = BAD_REQ;
+
+    // have a place to store the request while parsing it
     string rawReq;
 
     LOG("Hi. I'm collecting a request.\n");
@@ -113,7 +123,7 @@ Server::collect_request(int client) {
     // read until we get a newline
     // ScanForSentinel returns an empty string until it finds the delimiter.
     while ((rawReq = buf_.ScanForSentinel('\n')) == "") {
-        // make a buffer (inefficient, I know; v2 will find a buffer)
+        // make a buffer (inefficient, I know; v2 will find a buffer or something)
         c_buf *buf = buf_.GetBuffer();
         LOG("Firing up recv\n");
         // recv off the socket
@@ -126,40 +136,95 @@ Server::collect_request(int client) {
                 perror("while scanning for sentinel");
                 // an error occurred, so break out
                 LOG("saw error on recv: %d\n", errno);
-                return req;
+                return false;
             }
         } else if (nread == 0) {
             // the socket is closed
             LOG("collect_request recv reports that socket is closed.\n");
-            return req;
+            return false;
         }
         buf_.ReturnBuffer(buf, nread);
         LOG("Just read one packet: '%s'\n", rawReq.c_str());
     }
+
     // if we somehow got an empty string, worry
     LOG("Hey! I have a whole request! '%s'\n", rawReq.c_str());
+
     // parse the received command
-    int fields;
+    size_t idx1 = string::npos, idx2 = string::npos, idx3 = string::npos;
+    int msgLen;
+    string type;
+
     switch (rawReq.at(0)) {
     case 'p':
-        int msgLen;
-        fields = sscanf(rawReq.c_str(), "put %s %s %d\n", &req.name, &req.subject, &msgLen);
-        if (fields != 3) {
-            break;
+        idx1 = rawReq.find(" ", 0);
+        if (idx1 == string::npos) {
+            LOG("First put delimiter not found\n");
+            return true;
         }
-        req.type = PUT;
+        idx2 = rawReq.find(" ", idx1+1);
+        if (idx2 == string::npos) {
+            LOG("Secondput delimiter not found\n");
+            return true;
+        }
+        idx3 = rawReq.find(" ", idx2+1);
+        if (idx3 == string::npos) {
+            LOG("Third put delimiter not found\n");
+            return true;
+        }
+        if (rawReq.find(" ", idx3+1) != string::npos) {
+            LOG("Too Many Delimiters!\n");
+            return true;
+        }
+        type = rawReq.substr(0, idx1);
+        if (type != "put") {
+            LOG("Bad Verb: %s\n", type.c_str());
+            return true;
+        }
+
+        req->name = rawReq.substr(idx1+1, idx2);
+        req->subject = rawReq.substr(idx2+1, idx3);
+        msgLen = atoi(rawReq.substr(idx3+1, string::npos).c_str());
+        req->message = "";
+
+        while ((req->message = buf_.GetNBytes(msgLen)) == "") {
+            c_buf* buf = buf_.GetBuffer();
+            LOG("Firing up recv for message\n");
+            // recv off the socket
+            int nread = recv(client,buf->buf,buf->size,0);
+            if (nread < 0) {
+                if (errno == EINTR) {
+                    // the socket call was interrupted -- try again
+                    continue;
+                } else {
+                    perror("while reading n bytes");
+                    // an error occurred, so break out
+                    LOG("saw error on recv for message: %d\n", errno);
+                    return false;
+                }
+            } else if (nread == 0) {
+                // the socket is closed
+                LOG("collect_request message recv reports that socket is closed.\n");
+                return false;
+            }
+            buf_.ReturnBuffer(buf, nread);
+        }
+
+        LOG("Got message.\n\tName: %s\n\tSubject: %s\n\tMessage Length: %d\n\tMessage:\n'%s'\n", req->name.c_str(), req->subject.c_str(), msgLen, req->message.c_str());
+
+        req->type = PUT;
         break;
     case 'l':
-        req.type = LIST;
+        req->type = LIST;
         break;
     case 'g':
-        req.type = GET;
+        req->type = GET;
         break;
     case 'r':
-        req.type = RESET;
+        req->type = RESET;
         break;
     }
-    return req;
+    return true;
 }
 
 bool
@@ -168,7 +233,7 @@ Server::send_response(int client, string response) {
     const char* ptr = response.c_str();
     int nleft = response.length();
     int nwritten;
-    LOG("Sending request: '%s'\n", response.c_str());
+    LOG("Sending response: '%s'\n", response.c_str());
     // loop to be sure it is all sent
     while (nleft) {
         if ((nwritten = send(client, ptr, nleft, 0)) < 0) {
@@ -187,6 +252,6 @@ Server::send_response(int client, string response) {
         nleft -= nwritten;
         ptr += nwritten;
     }
-    LOG("request sent.\n");
+    LOG("response sent.\n");
     return true;
 }

@@ -22,7 +22,7 @@ private:
     void create();
     void serve();
     void handle(int);
-    Request collect_request(int);
+    bool collect_request(int, Request*);
     bool send_response(int, string);
 
     int port_;
