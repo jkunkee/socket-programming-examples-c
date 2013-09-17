@@ -3,6 +3,11 @@
 
 #include "socket.h"
 
+// DB storage
+#include <map>
+#include <vector>
+#include <utility>
+
 class MsgServer
 {
 public:
@@ -18,7 +23,7 @@ private:
 
     // fields
     Socket serverSocket;
-    //map db;
+    map <string, vector <pair <string, string> > > db;
 };
 
 #endif // MSGSERVER_H
