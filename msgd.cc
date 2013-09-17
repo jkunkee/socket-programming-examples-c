@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "server.h"
+#include "msgserver.h"
 #include "logger.h"
 
 using namespace std;
@@ -34,5 +34,6 @@ main(int argc, char **argv)
     }
     LOG("\nWelcome to Msgd vJon\n\n");
 
-    Server server = Server(port);
+    MsgServer server(port);
+    return server.listen();
 }

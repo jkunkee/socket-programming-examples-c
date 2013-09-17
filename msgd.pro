@@ -7,14 +7,16 @@ SOURCES += client.cc \
     infinibuf.cc \
     msgd.cc \
     msgdclient.cc \
-    server.cc \
-    logger.cc
+    logger.cc \
+    msgserver.cc \
+    socket.cc
 
 HEADERS += \
     client.h \
     infinibuf.h \
     proto.h \
-    server.h \
-    logger.h
+    logger.h \
+    msgserver.h \
+    socket.h
 
 

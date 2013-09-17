@@ -1,8 +1,8 @@
 # Makefile for socket examples
 
 CXX=	g++ $(CCFLAGS)
-UTIL=	logger.o infinibuf.o
-MSGD=	msgd.o server.o $(UTIL)
+UTIL=	logger.o infinibuf.o socket.o
+MSGD=	msgd.o msgserver.o $(UTIL)
 MSG=	msg.o client.o $(UTIL)
 OBJS =	$(MSGD) $(MSG)
 
