@@ -62,7 +62,7 @@ int MsgServer::serveClient(Socket &sock)
                 LOG("Missing PUT string\n");
                 response = "error - Missing field in PUT request\n";
                 err = sock.sendString(response);
-                if (err <= 0) {
+                if (err < 0) {
                     return err;
                 }
                 continue;
@@ -70,7 +70,9 @@ int MsgServer::serveClient(Socket &sock)
 
             len = atoi(lenStr.c_str());
             err = sock.readNBytes(len, message);
-            if (err <= 0) {
+            if (err < 0) {
+                //perror("readNBytes");
+                LOG("Error during PUT readNBytes: %d.\n", err);
                 return err;
             }
 
@@ -85,7 +87,7 @@ int MsgServer::serveClient(Socket &sock)
                 LOG("Missing LIST username\n");
                 response = "error - Missing username in LIST request\n";
                 err = sock.sendString(response);
-                if (err <= 0) {
+                if (err < 0) {
                     return err;
                 }
                 continue;
@@ -102,7 +104,7 @@ int MsgServer::serveClient(Socket &sock)
                  msgIterator != msgList.end();
                  msgIterator++) {
                 pair <string, string> msg = (*msgIterator);
-                responseStream << distance(msgList.begin(), msgIterator);
+                responseStream << distance(msgList.begin(), msgIterator)+1;
                 responseStream << " ";
                 responseStream << msg.first;
                 responseStream << "\n";
@@ -119,25 +121,36 @@ int MsgServer::serveClient(Socket &sock)
                 LOG("Missing GET field\n");
                 response = "error - Missing field in GET request\n";
                 err = sock.sendString(response);
-                if (err <= 0) {
+                if (err < 0) {
                     return err;
                 }
                 continue;
             }
 
             index = atoi(idxStr.c_str());
+            if (index < 1 || db[user].size() < index) {
+                LOG("Out of bounds condition!\n");
+                response = "error - GET index is out of bounds\n";
+                err = sock.sendString(response);
+                if (err < 0) {
+                    return err;
+                }
+                continue;
+            }
+            // this protocol is apparently 1-indexed :(
+            index--;
 
             // fetch
-            pair<string,string> msg = db[user][index];
+            //pair<string,string> msg = db[user][index];
 
             response = "";
             stringstream resStream(response);
             resStream << "message ";
-            resStream << msg.first;
+            resStream << db[user][index].first;
             resStream << " ";
-            resStream << msg.second.length();
+            resStream << db[user][index].second.length();
             resStream << "\n";
-            resStream << msg.second;
+            resStream << db[user][index].second;
             response = (resStream.str());
         } else if (verb == "reset") {
             db.clear();
