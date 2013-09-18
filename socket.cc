@@ -12,6 +12,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+// for making client sockets
+#include <netdb.h>
 
 // for debugging
 #include "logger.h"
@@ -60,6 +62,45 @@ Socket::Socket(int srvPort, int maxConns)
         perror("listen");
         exit(-1);
     }
+}
+
+Socket::Socket(string host_, int port_)
+{
+    bufLen = DEFAULT_BUFFER_LENGTH;
+    buf = new char[bufLen+1];
+    LOG("Successfully allocated new buffer!\n");
+    LOG("Starting to create client socket...\n");
+
+    struct sockaddr_in server_addr;
+
+    // use DNS to get IP address
+    struct hostent *hostEntry;
+    hostEntry = gethostbyname(host_.c_str());
+    if (!hostEntry) {
+        LOG("No such host name: %s\n", host_.c_str());
+        exit(-1);
+    }
+
+    // setup socket address structure
+    memset(&server_addr,0,sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port_);
+    memcpy(&server_addr.sin_addr, hostEntry->h_addr_list[0], hostEntry->h_length);
+
+    // create socket
+    int server_ = socket(PF_INET,SOCK_STREAM,0);
+    if (!server_) {
+        perror("socket");
+        exit(-1);
+    }
+
+    // connect to server
+    if (connect(server_,(const struct sockaddr *)&server_addr,sizeof(server_addr)) < 0) {
+        perror("connect");
+        exit(-1);
+    }
+
+    sockFd = server_;
 }
 
 Socket::Socket(int fd)
@@ -120,7 +161,7 @@ int Socket::readToSentinel(const char *sentinel, string &targ)
 
 int Socket::readNBytes(int n, string &targ)
 {
-    int idx, nread;
+    int nread;
     while (cache.length() < n) {
 
         LOG("Trying to read off of socket\n");
@@ -172,17 +213,17 @@ int Socket::sendString(string &response)
             } else {
                 // an error occurred, so break out
                 perror("write");
-                return false;
+                return -1;
             }
         } else if (nwritten == 0) {
             // the socket is closed
-            return false;
+            return 0;
         }
         nleft -= nwritten;
         ptr += nwritten;
     }
     LOG("response sent.\n");
-    return true;
+    return 1;
 }
 
 int Socket::acceptClient()

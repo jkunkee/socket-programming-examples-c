@@ -3,7 +3,7 @@
 CXX=	g++ $(CCFLAGS)
 UTIL=	logger.o infinibuf.o socket.o
 MSGD=	msgd.o msgserver.o $(UTIL)
-MSG=	msg.o client.o $(UTIL)
+MSG=	msg.o msgclient.o $(UTIL)
 OBJS =	$(MSGD) $(MSG)
 
 LIBS=

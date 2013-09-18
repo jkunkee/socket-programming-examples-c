@@ -16,6 +16,9 @@ public:
     Socket(int fd);
     // create a listening socket
     Socket(int port, int maxConns);
+    // make a connection
+    Socket(string host_, int port_);
+    // I am become XYXY, Deallocator of Memory
     ~Socket();
 
     // stream readers

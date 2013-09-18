@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "client.h"
+#include "msgclient.h"
 #include "logger.h"
 
 using namespace std;
@@ -39,6 +39,8 @@ main(int argc, char **argv)
     }
 
     LOG("\nWelcome to msg client vJon\n\n");
-    Client client = Client(host, port);
+
+    MsgClient client(host, port);
+    client.run();
 }
 

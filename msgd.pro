@@ -3,20 +3,21 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += client.cc \
-    infinibuf.cc \
+SOURCES += \
     msgd.cc \
-    msgdclient.cc \
+    msg.cc \
+    infinibuf.cc \
     logger.cc \
+    socket.cc \
     msgserver.cc \
-    socket.cc
+    msgclient.cc
 
 HEADERS += \
-    client.h \
     infinibuf.h \
-    proto.h \
     logger.h \
+    socket.h \
+    proto.h \
     msgserver.h \
-    socket.h
+    msgclient.h
 
 
