@@ -1,6 +1,8 @@
 #include "server.h"
 
 #include <iostream>
+#include <sstream>
+
 // for logging
 #include "logger.h"
 
@@ -151,43 +153,34 @@ Server::collect_request(int client, Request* req) {
     LOG("Hey! I have a whole request! '%s'\n", rawReq.c_str());
 
     // parse the received command
-    size_t idx1 = string::npos, idx2 = string::npos, idx3 = string::npos;
+    stringstream stream(rawReq);
     int msgLen;
     string type;
 
     switch (rawReq.at(0)) {
     case 'p':
-        idx1 = rawReq.find(" ", 0);
-        if (idx1 == string::npos) {
-            LOG("First put delimiter not found\n");
-            return true;
-        }
-        idx2 = rawReq.find(" ", idx1+1);
-        if (idx2 == string::npos) {
-            LOG("Secondput delimiter not found\n");
-            return true;
-        }
-        idx3 = rawReq.find(" ", idx2+1);
-        if (idx3 == string::npos) {
-            LOG("Third put delimiter not found\n");
-            return true;
-        }
-        if (rawReq.find(" ", idx3+1) != string::npos) {
-            LOG("Too Many Delimiters!\n");
-            return true;
-        }
-        type = rawReq.substr(0, idx1);
+        // default delimiter is whitespace
+        stream >> type;
         if (type != "put") {
-            LOG("Bad Verb: %s\n", type.c_str());
+            LOG("Not a put request! :P\n");
             return true;
         }
+        stream >> req->name;
+        if (req->name == "") {
+            LOG("No name found!\n");
+            return true;
+        }
+        stream >> req->subject;
+        if (req->subject == "") {
+            LOG("No subject found!\n");
+            return true;
+        }
+        stream >> msgLen;
 
-        req->name = rawReq.substr(idx1+1, idx2);
-        req->subject = rawReq.substr(idx2+1, idx3);
-        msgLen = atoi(rawReq.substr(idx3+1, string::npos).c_str());
+        // now read in the message
         req->message = "";
 
-        while ((req->message = buf_.GetNBytes(msgLen)) == "") {
+        while (req->message == "" && msgLen != 0) {
             c_buf* buf = buf_.GetBuffer();
             LOG("Firing up recv for message\n");
             // recv off the socket
@@ -208,6 +201,7 @@ Server::collect_request(int client, Request* req) {
                 return false;
             }
             buf_.ReturnBuffer(buf, nread);
+            req->message = buf_.GetNBytes(msgLen);
         }
 
         LOG("Got message.\n\tName: %s\n\tSubject: %s\n\tMessage Length: %d\n\tMessage:\n'%s'\n", req->name.c_str(), req->subject.c_str(), msgLen, req->message.c_str());
