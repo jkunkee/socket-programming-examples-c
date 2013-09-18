@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "client.h"
+#include "logger.h"
 
 using namespace std;
 
@@ -16,9 +17,11 @@ main(int argc, char **argv)
     int port = 3000;
     string host = "localhost";
 
+    Logger::getInstance()->doNotLog();
+
     // process command line options using getopt()
     // see "man 3 getopt"
-    while ((option = getopt(argc,argv,"h:p:")) != -1) {
+    while ((option = getopt(argc,argv,"dh:p:")) != -1) {
         switch (option) {
             case 'p':
                 port = atoi(optarg);
@@ -26,12 +29,16 @@ main(int argc, char **argv)
             case 'h':
                 host = optarg;
                 break;
+            case 'd':
+                Logger::getInstance()->doLog();
+                break;
             default:
-                cout << "client [-h host] [-p port]" << endl;
+                cout << "client [-h host] [-p port] [-d]" << endl;
                 exit(EXIT_FAILURE);
         }
     }
 
+    LOG("\nWelcome to msg client vJon\n\n");
     Client client = Client(host, port);
 }
 
